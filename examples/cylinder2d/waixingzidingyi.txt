@@ -1,0 +1,78 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+# define geometry
+s_o = (-2, -2)
+s_e = (2, 2)
+# define discrete points num
+ns = (41, 41)
+nx = np.linspace(s_o[0], s_e[0], ns[0])
+ny = np.linspace(s_o[1], s_e[1], ns[1])
+# get coordinate of x and y in axis
+x = np.array(nx)
+y = np.array(ny)
+print(f'x方向离散值：{x}, y方向离散点数为：{y}')
+# mesh form x and y, get arrays
+domain = np.meshgrid(x, y)
+# print(domain)
+x_p = domain[0].reshape(-1, 1)
+y_p = domain[1].reshape(-1, 1)
+space_p = np.hstack((x_p, y_p))
+# define circle
+cir_c = (0, 0)
+r = 1
+theta = 0
+x_cir = []
+y_cir = []
+while theta <= 2 * math.pi:
+    x_cir.append(cir_c[0] + r * math.cos(theta))
+    y_cir.append(cir_c[1] + r * math.sin(theta))
+    theta += 0.01
+xy_cir = np.hstack((np.array(x_cir).reshape(-1, 1), np.array(y_cir).reshape(-1, 1)))
+index_o = 0
+index_i = 0
+bc_cir = []
+bc_inner = []
+for point in space_p:
+    for inner_p in xy_cir:
+        if abs(inner_p[0]) - abs(point[0]) > 0.02 and abs(inner_p[1]) - abs(point[1]) > 0.02:
+            index_i = index_o
+            bc_inner.append(index_i)
+    index_o += 1
+space_p = np.delete(space_p, np.unique(bc_inner), axis=0)
+print(space_p.shape)
+# print(space_p)
+plt.scatter(space_p[:, 0], space_p[:, 1])
+plt.show()
+
+id_o = 0
+index_c = 0
+bc_cir = []
+for pp in space_p:
+    for bp in xy_cir:
+        if abs(bp[0] - pp[0]) < 0.02 and abs(bp[1] - pp[1]) < 0.02:
+            index_c = id_o
+            bc_cir.append(index_c)
+    id_o += 1
+bc_cir = np.unique(bc_cir)
+#
+plt.scatter(space_p[bc_cir.reshape(len(bc_cir), 1), 0], space_p[bc_cir.reshape(len(bc_cir), 1), 1])
+plt.show()
+
+id_r = 0
+index_b = 0
+bc_side = []
+for pp in space_p:
+    if abs(-2 - pp[0]) < 0.001 or abs(2 - pp[0]) < 0.001 or abs(-2 - pp[1]) < 0.001 or abs(2 - pp[1]) < 0.001:
+        index_b = id_r
+        bc_side.append(index_b)
+    id_r += 1
+bc_side = np.unique(bc_side)
+#
+plt.scatter(space_p[bc_side.reshape(len(bc_side), 1), 0], space_p[bc_side.reshape(len(bc_side), 1), 1])
+plt.show()
+print(bc_side.shape)
+print(bc_cir.shape)
+bc_index = np.vstack((bc_side.reshape(-1, 1), bc_cir.reshape(-1, 1)))
+print(bc_index.shape)
